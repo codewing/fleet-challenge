@@ -37,8 +37,8 @@ pub fn run_server(listener: TcpListener) -> Result<Server, std::io::Error> {
             .service(health_controller::health_check)
             .service(
                 web::scope("/v1")
-                    .service(layout_controller::validate_layout)
-                    .service(route_controller::route),
+                    .service(web::scope("/layout").service(layout_controller::validate))
+                    .service(web::scope("/routing").service(route_controller::route)),
             )
     })
     .listen(listener)?

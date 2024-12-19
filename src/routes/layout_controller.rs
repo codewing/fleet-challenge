@@ -1,6 +1,16 @@
-use actix_web::{get, HttpResponse, Responder};
+use actix_web::{http::StatusCode, post, web, HttpResponse};
 
-#[get("/validate-layout")]
-pub async fn validate_layout() -> impl Responder {
-    HttpResponse::Ok().finish()
+use crate::{
+    domain::valid_graph::ValidGraph,
+    error::ServiceError,
+    views::{graph::Graph, utils::to_response},
+};
+
+#[post("/validate")]
+pub async fn validate(graph: web::Json<Graph>) -> Result<HttpResponse, ServiceError> {
+    let valid_graph = ValidGraph::try_from(&graph.into_inner())?;
+
+    // store valid graph
+
+    Ok(to_response("Good Graph!", StatusCode::OK))
 }

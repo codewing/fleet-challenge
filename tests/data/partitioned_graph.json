@@ -1,0 +1,55 @@
+{
+    "id": "partitioned_map",
+    "nodes": [
+        {
+            "id": "Node_A1",
+            "position": {
+                "x": 0.0,
+                "y": 0.0
+            }
+        },
+        {
+            "id": "Node_A2",
+            "position": {
+                "x": 18.0,
+                "y": 0.0
+            }
+        },
+        {
+            "id": "Node_B1",
+            "position": {
+                "x": 25.0,
+                "y": 0.0
+            }
+        },
+        {
+            "id": "Node_B2",
+            "position": {
+                "x": 10.0,
+                "y": 10.0
+            }
+        }
+    ],
+    "edges": [
+        {
+            "id": "A1_2_A2",
+            "source": "Node_A1",
+            "sink": "Node_A2"
+        },
+        {
+            "id": "A2_2_A1",
+            "source": "Node_A2",
+            "sink": "Node_A1"
+        },
+        {
+            "id": "B1_2_B2",
+            "source": "Node_B1",
+            "sink": "Node_B2"
+        },
+        {
+            "id": "B2_2_B1",
+            "source": "Node_B2",
+            "sink": "Node_B1"
+        }
+    ]
+}
