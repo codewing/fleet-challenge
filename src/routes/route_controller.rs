@@ -4,6 +4,7 @@ use actix_web::{get, http::StatusCode, web, Responder};
 
 use crate::{
     application::ValidationState,
+    domain::graph::{Graph, Node},
     error::ServiceError,
     views::{
         route_request::RouteRequest,
@@ -45,6 +46,18 @@ pub async fn route(
                 route_request.goal
             )))?;
 
+    let node_distances = gather_node_distances(graph, start_node, end_node);
+
+    let route = build_route(graph, node_distances, start_node, end_node);
+
+    Ok(to_response(route, StatusCode::OK))
+}
+
+fn gather_node_distances<'a>(
+    graph: &'a Graph,
+    start_node: &'a Node,
+    end_node: &'a Node,
+) -> HashMap<&'a str, (f32, &'a str)> {
     let mut node_distances = HashMap::new();
     node_distances.insert(start_node.id.as_str(), (0f32, ""));
 
@@ -91,11 +104,22 @@ pub async fn route(
         });
     }
 
-    let mut route = Route::default();
+    node_distances
+}
+
+fn build_route(
+    graph: &Graph,
+    node_distances: HashMap<&str, (f32, &str)>,
+    start_node: &Node,
+    end_node: &Node,
+) -> Route {
+    let mut found_route = Route::default();
     let (dist, _) = node_distances.get(end_node.id.as_str()).unwrap();
-    route.distance = *dist;
+    found_route.distance = *dist;
     let mut current_node = end_node;
-    route.sequence.push(RouteStep::NodeId(end_node.id.clone()));
+    found_route
+        .sequence
+        .push(RouteStep::NodeId(end_node.id.clone()));
 
     while current_node.id != start_node.id {
         let (_, edge_id) = node_distances.get(current_node.id.as_str()).unwrap();
@@ -106,13 +130,16 @@ pub async fn route(
             .find(|edge| edge.id.as_str() == *edge_id)
             .unwrap();
 
-        route.sequence.push(RouteStep::EdgeId(edge.id.clone()));
-        route.sequence.push(RouteStep::NodeId(edge.source.clone()));
+        found_route
+            .sequence
+            .push(RouteStep::EdgeId(edge.id.clone()));
+        found_route
+            .sequence
+            .push(RouteStep::NodeId(edge.source.clone()));
 
         current_node = graph.find_node(edge.source.as_str()).unwrap();
     }
 
-    route.sequence.reverse();
-
-    Ok(to_response(route, StatusCode::OK))
+    found_route.sequence.reverse();
+    found_route
 }
