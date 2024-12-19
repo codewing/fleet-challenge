@@ -2,6 +2,7 @@ use validator::Validate;
 
 use crate::{error::ServiceError, views::graph::Graph};
 
+#[derive(Debug)]
 pub struct ValidGraph(Graph);
 
 impl TryFrom<&Graph> for ValidGraph {
@@ -14,5 +15,11 @@ impl TryFrom<&Graph> for ValidGraph {
             }),
             Err(err) => Err(ServiceError::ValidationError(err.to_string())),
         }
+    }
+}
+
+impl AsRef<Graph> for ValidGraph {
+    fn as_ref(&self) -> &Graph {
+        &self.0
     }
 }
