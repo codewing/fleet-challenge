@@ -10,18 +10,24 @@ use validator::{Validate, ValidationError};
 #[validate(schema(function = "validate_graph", skip_on_field_errors = false))]
 pub struct Graph {
     #[validate(length(min = 1))]
-    id: String,
+    pub id: String,
     #[validate(nested)]
-    nodes: Vec<Node>,
+    pub nodes: Vec<Node>,
     #[validate(nested)]
-    edges: Vec<Edge>,
+    pub edges: Vec<Edge>,
+}
+
+impl Graph {
+    pub fn find_node(&self, id: &str) -> Option<&Node> {
+        self.nodes.iter().find(|node| node.id == id)
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Validate)]
 pub struct Node {
     #[validate(length(min = 1))]
-    id: String,
-    position: Position,
+    pub id: String,
+    pub position: Position,
 }
 
 impl Eq for Node {}
@@ -32,20 +38,34 @@ impl Hash for Node {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Validate)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Validate)]
 pub struct Edge {
     #[validate(length(min = 1))]
-    id: String,
+    pub id: String,
     #[validate(length(min = 1))]
-    source: String,
+    pub source: String,
     #[validate(length(min = 1))]
-    sink: String,
+    pub sink: String,
+}
+
+impl Hash for Edge {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.id.hash(state);
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Position {
     x: f32,
     y: f32,
+}
+
+impl Position {
+    pub fn distance_to(&self, other: &Position) -> f32 {
+        let dist_x = (other.x - self.x).powi(2);
+        let dist_y = (other.y - self.y).powi(2);
+        (dist_x + dist_y).sqrt()
+    }
 }
 
 fn validate_graph(value: &Graph) -> Result<(), ValidationError> {
@@ -98,27 +118,31 @@ fn validate_node_connectivity(graph: &Graph) -> Result<(), ValidationError> {
 }
 
 fn validate_node_degree(graph: &Graph) -> Result<(), ValidationError> {
-    let mut node_degree_map: HashMap<&str, i32> = graph
+    let mut node_degree_map: HashMap<&str, (i32, i32)> = graph
         .nodes
         .iter()
-        .map(|node| (node.id.as_str(), 0))
+        .map(|node| (node.id.as_str(), (0, 0)))
         .collect();
 
     for edge in &graph.edges {
         match node_degree_map.get(edge.source.as_str()) {
-            Some(degree) => node_degree_map.insert(edge.source.as_str(), degree + 1),
+            Some((in_deg, out_deg)) => {
+                node_degree_map.insert(edge.source.as_str(), (*in_deg, out_deg + 1))
+            }
             None => return Err(ValidationError::new("missing_source_node")),
         };
 
         match node_degree_map.get(edge.sink.as_str()) {
-            Some(degree) => node_degree_map.insert(edge.sink.as_str(), degree + 1),
+            Some((in_deg, out_deg)) => {
+                node_degree_map.insert(edge.sink.as_str(), (in_deg + 1, *out_deg))
+            }
             None => return Err(ValidationError::new("missing_sink_node")),
         };
     }
 
-    for (_node, degree) in node_degree_map.iter() {
-        if *degree < 2 {
-            return Err(ValidationError::new("invalid_node_degree"));
+    for (_node, (in_deg, out_deg)) in node_degree_map.iter() {
+        if in_deg < &1i32 || out_deg < &1i32 {
+            return Err(ValidationError::new("invalid_node_connectivity"));
         }
     }
 

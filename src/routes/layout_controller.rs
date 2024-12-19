@@ -2,9 +2,9 @@ use actix_web::{http::StatusCode, post, web, HttpResponse};
 
 use crate::{
     application::ValidationState,
-    domain::valid_graph::ValidGraph,
+    domain::{graph::Graph, valid_graph::ValidGraph},
     error::ServiceError,
-    views::{graph::Graph, success_response::SuccessResponse, utils::to_response},
+    views::{success_response::SuccessResponse, utils::to_response},
 };
 
 #[post("/validate")]

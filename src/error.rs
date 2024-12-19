@@ -7,6 +7,9 @@ use crate::views::{error_response::ErrorResponse, utils::to_response};
 #[derive(Debug, thiserror::Error, EnumDiscriminants)]
 #[strum_discriminants(derive(Serialize, Deserialize), serde(rename_all = "snake_case"))]
 pub enum ServiceError {
+    #[error("A invalid state error ocurred: {0}")]
+    InvalidStateError(String),
+
     #[error("A validation error ocurred: {0}")]
     ValidationError(String),
 
@@ -19,6 +22,7 @@ impl ResponseError for ServiceError {
         match self {
             ServiceError::InternalError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             ServiceError::ValidationError(_) => StatusCode::BAD_REQUEST,
+            ServiceError::InvalidStateError(_) => StatusCode::BAD_REQUEST,
         }
     }
 

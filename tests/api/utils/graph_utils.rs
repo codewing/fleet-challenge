@@ -1,6 +1,6 @@
 use std::{fs::File, io::BufReader};
 
-use arculus_fleet_manager::views::graph::Graph;
+use arculus_fleet_manager::domain::graph::Graph;
 
 pub fn load_graph(file_name: &str) -> Result<Graph, std::io::Error> {
     let file = File::open(format!("./tests/data/{file_name}.json"))?;
