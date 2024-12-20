@@ -27,4 +27,5 @@ validator = { version = "0.19.0", features = ["derive"] }
 serde_json = "1.0.133"
 
 [dev-dependencies]
+assertables = "9.5.0"
 reqwest = { version = "0.12.9", features = ["json"] }

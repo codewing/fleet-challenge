@@ -1,4 +1,4 @@
-use std::collections::{HashMap, VecDeque};
+use std::collections::{HashMap, HashSet};
 
 use actix_web::{get, http::StatusCode, web, Responder};
 
@@ -61,16 +61,41 @@ fn gather_node_distances<'a>(
     let mut node_distances = HashMap::new();
     node_distances.insert(start_node.id.as_str(), (0f32, ""));
 
-    let mut border_edges = VecDeque::new();
+    let node_map: HashMap<_, _> = graph
+        .nodes
+        .iter()
+        .map(|x| (x.id.as_str(), x.position.clone()))
+        .collect();
+
+    let mut border_edges = HashSet::new();
 
     graph.edges.iter().for_each(|edge| {
         if edge.source == start_node.id {
-            border_edges.push_back(edge);
+            border_edges.insert(edge);
         }
     });
 
     while !node_distances.contains_key(end_node.id.as_str()) {
-        let current_edge = border_edges.pop_front().unwrap();
+        let current_edge = border_edges
+            .iter()
+            .min_by(|x, y| {
+                //didn't have the brain-power left yesterday to make it an a* but here it is :)
+                let x_pos = node_map.get(x.sink.as_str()).unwrap();
+                let y_pos = node_map.get(y.sink.as_str()).unwrap();
+
+                let (x_dist_start, _) = node_distances.get(x.source.as_str()).unwrap();
+                let (y_dist_start, _) = node_distances.get(y.source.as_str()).unwrap();
+                let x_dist_end = x_pos.distance_to(&end_node.position);
+                let y_dist_end = y_pos.distance_to(&end_node.position);
+
+                (x_dist_start + x_dist_end)
+                    .partial_cmp(&(y_dist_start + y_dist_end))
+                    .expect("there shouldn't be any NaNs")
+            })
+            .unwrap()
+            .to_owned();
+
+        border_edges.remove(current_edge);
 
         let (prev_node_id, (prev_dist, _edge_id)) = node_distances
             .get_key_value(current_edge.source.as_str())
@@ -99,7 +124,7 @@ fn gather_node_distances<'a>(
 
         graph.edges.iter().for_each(|edge| {
             if edge.source == next_node.id {
-                border_edges.push_back(edge);
+                border_edges.insert(edge);
             }
         });
     }

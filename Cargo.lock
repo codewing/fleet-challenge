@@ -242,6 +242,7 @@ name = "arculus-fleet-manager"
 version = "0.1.0"
 dependencies = [
  "actix-web",
+ "assertables",
  "once_cell",
  "reqwest",
  "serde",
@@ -257,6 +258,12 @@ dependencies = [
  "tracing-subscriber",
  "validator",
 ]
+
+[[package]]
+name = "assertables"
+version = "9.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0082388b8564898f945b04215e800e800a164af15307d8dfe714b02cc69356e9"
 
 [[package]]
 name = "atomic-waker"
